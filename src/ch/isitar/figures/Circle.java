@@ -3,12 +3,11 @@ package ch.isitar.figures;
 import com.jogamp.opengl.GL3;
 
 import ch.fhnw.pfcs.MyGLBase1;
+import ch.fhnw.pfcs.Point;
 
-public class Circle implements Figure {
+public class Circle implements ThrowableFigure {
     private double radius = 0;
-    private float x;
-    private float y;
-    private float z;
+    private Point p;
 
     public double getRadius() {
         return radius;
@@ -18,57 +17,47 @@ public class Circle implements Figure {
         this.radius = radius;
     }
 
-    public float getX() {
-        return x;
-    }
-
-    public void setX(float x) {
-        this.x = x;
-    }
-
-    public float getY() {
-        return y;
-    }
-
-    public void setY(float y) {
-        this.y = y;
-    }
-
-    public float getZ() {
-        return z;
-    }
-
-    public void setZ(float z) {
-        this.z = z;
-    }
-
     public Circle(double radius, float x, float y, float z) {
+        this(radius, new Point(x, y, z));
+    }
+
+    public Circle(double radius, Point p) {
         super();
         this.radius = radius;
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.p = p;
     }
 
     @Override
     public void draw(GL3 gl, MyGLBase1 mygl) {
 
+        // draw(gl, mygl, x, y, z);
         int numberOfTriangles = 100;
-        mygl.putVertex(x, y, z);
+
+        mygl.putVertex(p.getX(), p.getY(), p.getZ());
         double phi = 2 * Math.PI / numberOfTriangles;
         for (int i = 0; i <= numberOfTriangles; i++) {
-            mygl.putVertex((float) (x + radius * Math.cos(i * phi)), (float) (y + radius * Math.sin(i * phi)), z);
+            mygl.putVertex((float) (p.getX() + radius * Math.cos(i * phi)),
+                    (float) (p.getY() + radius * Math.sin(i * phi)), p.getZ());
         }
 
         mygl.copyBuffer(gl);
         mygl.drawArrays(gl, GL3.GL_TRIANGLE_FAN);
-
     }
 
     @Override
     public void update() {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public Point getPoint() {
+        return p;
+    }
+
+    @Override
+    public void setPoint(Point p) {
+        this.p = p;
     }
 
 }

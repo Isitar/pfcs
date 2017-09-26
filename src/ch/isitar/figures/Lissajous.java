@@ -27,7 +27,7 @@ public class Lissajous implements Figure {
 
     @Override
     public void draw(GL3 gl, MyGLBase1 mygl) {
-
+        
         for (int i = 0; i < n; i++) {
             mygl.putVertex(getX(i * t, amplitudeX, omegaX), getY(i * t, amplitudeY, omegaY, phi), 0);
         }
