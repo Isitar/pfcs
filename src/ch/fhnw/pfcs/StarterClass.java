@@ -9,10 +9,11 @@ import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.*;
 import com.jogamp.opengl.util.*;
 import ch.fhnw.util.math.*;
+import ch.isitar.figures.Circle;
 import ch.isitar.figures.Figure;
 import ch.isitar.figures.Lissajous;
 
-public class Lissajous2D implements WindowListener, GLEventListener {
+public class StarterClass implements WindowListener, GLEventListener {
 
     // --------- globale Daten ---------------------------
 
@@ -29,7 +30,7 @@ public class Lissajous2D implements WindowListener, GLEventListener {
 
     // --------- Methoden ----------------------------------
 
-    public Lissajous2D() // Konstruktor
+    public StarterClass() // Konstruktor
     {
         createFrame();
     }
@@ -62,10 +63,10 @@ public class Lissajous2D implements WindowListener, GLEventListener {
         mygl = new MyGLBase1(gl, programId, maxVerts); // OpenGL Basis-Funktionen
 
         figures = new ArrayList<>();
-        for (int i = 0; i < 40; ++i) {
-            figures.add(new Lissajous(1f, 1 + i * 0.1f, 1 + i * 0.1f, 1f, true));
-        }
-
+        // for (int i = 0; i < 40; ++i) {
+        // figures.add(new Lissajous(1f, 1 + i * 0.1f, 1 + i * 0.1f, 1f, true));
+        // }
+        figures.add(new Circle(0.5f, 0, 0, 0));
         FPSAnimator anim = new FPSAnimator(canvas, 60, true);
         anim.start();
     }
@@ -98,7 +99,7 @@ public class Lissajous2D implements WindowListener, GLEventListener {
     // ----------- main-Methode ---------------------------
 
     public static void main(String[] args) {
-        new Lissajous2D();
+        new StarterClass();
     }
 
     // --------- Window-Events --------------------
