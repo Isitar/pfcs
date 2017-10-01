@@ -14,13 +14,16 @@ import ch.isitar.figures.Figure;
 import ch.isitar.figures.KeyFigure;
 import ch.isitar.figures.Lissajous;
 import ch.isitar.figures.ThrowableFigure;
+import ch.isitar.figures.U2Blech;
+import ch.isitar.figures.U2Riffle;
 import ch.isitar.figures.WurfParabel;
+import ch.isitar.figures.FigureHolder;
 
-public class StarterClass implements WindowListener, GLEventListener, KeyListener {
+public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, FigureHolder {
 
     // --------- globale Daten ---------------------------
 
-    String windowTitle = "Lissajous";
+    String windowTitle = "Physik U2";
     int windowWidth = 800;
     int windowHeight = 800;
     String vShader = MyShaders.vShader1; // Vertex-Shader
@@ -30,12 +33,12 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
     MyGLBase1 mygl; // eigene OpenGL-Basisfunktionen
 
     private ArrayList<Figure> figures;
-    private float boundaryY;
-    private float boundaryX;
+    private float boundaryX = 10;
+    private float boundaryY = 10;
     private float boundaryZ;
     // --------- Methoden ----------------------------------
 
-    public StarterClass() // Konstruktor
+    public PhysikU2() // Konstruktor
     {
         createFrame();
     }
@@ -70,17 +73,9 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
         mygl = new MyGLBase1(gl, programId, maxVerts); // OpenGL Basis-Funktionen
 
         figures = new ArrayList<>();
-        // for (int i = 0; i < 40; ++i) {
-        // figures.add(new Lissajous(1f, 1 + i * 0.1f, 1 + i * 0.1f, 1f, true));
-        // }
-        float lissajousSize = 4f;
-        figures.add(new Lissajous(lissajousSize, lissajousSize, lissajousSize, lissajousSize, true));
-        // figures.add(new Circle(0.5f, 0, 0, 0));
-
-        figures.add(new WurfParabel(0.1f, 3, 5, 0.04, 0, -PhysicStatics.g, new Circle(0.3, -8f, -6f, 0), "R", "S"));
-        figures.add(new WurfParabel(0.1f, 4, 6, 0.04, 0, -PhysicStatics.g, new Circle(0.3, -8f, -6f, 0), "R", "S"));
-        figures.add(new WurfParabel(0.1f, 5, 7, 0.04, 0, -PhysicStatics.g, new Circle(0.3, -8f, -6f, 0), "R", "S"));
-        figures.add(new WurfParabel(0.1f, 6, 8, 0.04, 0, -PhysicStatics.g, new Circle(0.3, -8f, -6f, 0), "R", "S"));
+        figures.add(new U2Riffle(new Point(-boundaryX + 1, -boundaryY + 1, 0), Math.PI / 4, 3, this));
+        figures.add(new WurfParabel(0.01, 0, 0, 0.01, 0, -PhysicStatics.g,
+                new U2Blech(new Point(boundaryX - 1, boundaryY - 1, 0), 1, 2), "R", "S"));
         FPSAnimator anim = new FPSAnimator(canvas, 60, true);
         anim.start();
     }
@@ -97,6 +92,12 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
             f.draw(gl, mygl);
         });
 
+        figures.parallelStream().filter(f -> f instanceof ThrowableFigure).forEach(f -> {
+            if (((ThrowableFigure) f).getPoint().getY() < -10 * boundaryY) {
+                figures.remove(f);
+            }
+        });
+        ;
     }
 
     @Override
@@ -104,14 +105,13 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
         GL3 gl = drawable.getGL().getGL3();
         // Set the viewport to be the entire window
         gl.glViewport(0, 0, width, height);
-        float xP = 10;
+        float xP = this.boundaryX;
         float zP = 100;
         float aspect = (float) height / width;
         float yP = xP * aspect;
         Mat4 P = Mat4.ortho(-xP, xP, -yP, yP, -zP, zP);
         mygl.setP(gl, P);
 
-        this.boundaryX = xP;
         this.boundaryY = yP;
         this.boundaryZ = zP;
     }
@@ -123,7 +123,7 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
     // ----------- main-Methode ---------------------------
 
     public static void main(String[] args) {
-        new StarterClass();
+        new PhysikU2();
     }
 
     // --------- Window-Events --------------------
@@ -164,6 +164,22 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
     @Override
     public void keyTyped(KeyEvent e) {
         figures.stream().filter(f -> f instanceof KeyFigure).forEach(f -> ((KeyFigure) f).keyTyped(e));
+    }
+
+    @Override
+    public void AddFigure(Figure f) {
+        if (this.figures.contains(f)) {
+            return;
+        }
+        this.figures.add(f);
+    }
+
+    @Override
+    public void RemoveFigure(Figure f) {
+        if (!this.figures.contains(f)) {
+            return;
+        }
+        this.figures.remove(f);
     }
 
 }
