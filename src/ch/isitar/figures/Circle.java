@@ -1,5 +1,7 @@
 package ch.isitar.figures;
 
+import java.util.Random;
+
 import com.jogamp.opengl.GL3;
 
 import ch.fhnw.pfcs.MyGLBase1;
@@ -8,6 +10,7 @@ import ch.fhnw.pfcs.Point;
 public class Circle implements ThrowableFigure {
     private double radius = 0;
     private Point p;
+    private Point color;
 
     public double getRadius() {
         return radius;
@@ -25,11 +28,14 @@ public class Circle implements ThrowableFigure {
         super();
         this.radius = radius;
         this.p = p;
+
+        Random rnd = new Random();
+        color = new Point(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat());
     }
 
     @Override
     public void draw(GL3 gl, MyGLBase1 mygl) {
-
+        mygl.setColor(color.getX(), color.getY(), color.getZ());
         // draw(gl, mygl, x, y, z);
         int numberOfTriangles = 100;
 

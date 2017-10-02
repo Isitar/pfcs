@@ -4,6 +4,7 @@ package ch.fhnw.pfcs;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.*;
@@ -38,8 +39,7 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
     private float boundaryZ;
     // --------- Methoden ----------------------------------
 
-    public PhysikU2() // Konstruktor
-    {
+    public PhysikU2() {
         createFrame();
     }
 
@@ -85,7 +85,6 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
         GL3 gl = drawable.getGL().getGL3();
         gl.glClear(GL3.GL_COLOR_BUFFER_BIT); // Bildschirm loeschen
         mygl.setColor(0, 1, 0); // Farbe der Vertices
-
         figures.forEach(f -> f.update());
         figures.forEach(f -> {
             mygl.rewindBuffer(gl); // Vertex-Buffer zuruecksetzen
@@ -163,7 +162,10 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
 
     @Override
     public void keyTyped(KeyEvent e) {
-        figures.stream().filter(f -> f instanceof KeyFigure).forEach(f -> ((KeyFigure) f).keyTyped(e));
+        try {
+            figures.stream().filter(f -> f instanceof KeyFigure).forEach(f -> ((KeyFigure) f).keyTyped(e));
+        } catch (ConcurrentModificationException ex) {
+        }
     }
 
     @Override

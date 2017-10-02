@@ -14,12 +14,21 @@ public class U2Riffle implements Figure, KeyFigure {
     private double size;
     private FigureHolder figureHolder;
     private double speed = 10;
+    private Point shootingPoint;
 
     public U2Riffle(Point location, double alpha, double size, FigureHolder figureHolder) {
         this.location = location;
         this.alpha = alpha;
         this.size = size;
         this.figureHolder = figureHolder;
+
+        updateShootingPoint();
+    }
+
+    private void updateShootingPoint() {
+        float shootingX = (float) (location.getX() + size * Math.cos(alpha));
+        float shootingY = (float) (location.getY() + size * Math.sin(alpha));
+        this.shootingPoint = new Point(shootingX, shootingY, location.getZ());
     }
 
     private String keyPressedString = "";
@@ -35,22 +44,42 @@ public class U2Riffle implements Figure, KeyFigure {
 
     }
 
+    private void setSpeed(double newSpeed) {
+        if (newSpeed <= 0)
+            return;
+        this.speed = newSpeed;
+    }
+
     @Override
     public void keyTyped(KeyEvent e) {
         if (e.getKeyChar() == 'S' || e.getKeyChar() == 's') {
 
-            double v0y = speed * Math.sin(alpha);
             double v0x = speed * Math.cos(alpha);
+            double v0y = speed * Math.sin(alpha);
+
             this.figureHolder.AddFigure(new WurfParabel(1, v0y, v0x, 0.01, 0, -PhysicStatics.g,
-                    new Circle(0.1, new Point(this.location)), "", ""));
+                    new Circle(0.1, new Point(this.shootingPoint)), "", ""));
+        }
+
+        if (e.getKeyChar() == 'T' || e.getKeyChar() == 't') {
+
+            double delta = 0.174533; // 10°
+            double beta = alpha - 2 * delta;
+            for (int i = 0; i < 5; ++i) {
+                double v0x = speed * Math.cos(beta + i * delta);
+                double v0y = speed * Math.sin(beta + i * delta);
+
+                this.figureHolder.AddFigure(new WurfParabel(1, v0y, v0x, 0.01, 0, -PhysicStatics.g,
+                        new Circle(0.1, new Point(this.shootingPoint)), "", ""));
+            }
         }
 
         if (e.getKeyChar() == 'v') {
-            speed += 5;
-
+            setSpeed(speed + 5);
         }
+
         if (e.getKeyChar() == 'b') {
-            speed -= 5;
+            setSpeed(speed - 5);
         }
     }
 
@@ -82,7 +111,7 @@ public class U2Riffle implements Figure, KeyFigure {
 
         mygl.putVertex(topLeftX, topLeftY, location.getZ());
         mygl.copyBuffer(gl);
-        mygl.drawArrays(gl, GL3.GL_LINE_LOOP);
+        mygl.drawArrays(gl, GL3.GL_TRIANGLE_FAN);
     }
 
     private void setAlpha(double alpha) {
@@ -105,5 +134,7 @@ public class U2Riffle implements Figure, KeyFigure {
             // System.out.println(this.keyPressedString);
             break;
         }
+
+        updateShootingPoint();
     }
 }

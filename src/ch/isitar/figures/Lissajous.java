@@ -1,8 +1,11 @@
 package ch.isitar.figures;
 
+import java.util.Random;
+
 import com.jogamp.opengl.GL3;
 
 import ch.fhnw.pfcs.MyGLBase1;
+import ch.fhnw.pfcs.Point;
 
 public class Lissajous implements Figure {
 
@@ -14,6 +17,7 @@ public class Lissajous implements Figure {
     private int n = 100;
     private float t;
     private boolean increase;
+    private Point color;
 
     public Lissajous(float amplitudeX, float amplitudeY, float omegaX, float omegaY, boolean increase) {
         super();
@@ -23,11 +27,14 @@ public class Lissajous implements Figure {
         this.omegaY = omegaY;
         this.t = (float) ((2 * Math.PI) / (omegaX * n));
         this.increase = increase;
+        Random rnd = new Random();
+        color = new Point(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat());
+
     }
 
     @Override
     public void draw(GL3 gl, MyGLBase1 mygl) {
-        
+        mygl.setColor(color.getX(), color.getY(), color.getZ());
         for (int i = 0; i < n; i++) {
             mygl.putVertex(getX(i * t, amplitudeX, omegaX), getY(i * t, amplitudeY, omegaY, phi), 0);
         }
