@@ -66,8 +66,8 @@ public class MyFirst2D implements WindowListener, GLEventListener {
     public void init(GLAutoDrawable drawable) // Initialisierung
     {
         GL3 gl = drawable.getGL().getGL3();
-        System.out.println("OpenGl Version: " + gl.glGetString(gl.GL_VERSION));
-        System.out.println("Shading Language: " + gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION));
+        System.out.println("OpenGl Version: " + gl.glGetString(GL.GL_VERSION));
+        System.out.println("Shading Language: " + gl.glGetString(GL2ES2.GL_SHADING_LANGUAGE_VERSION));
         System.out.println();
         gl.glClearColor(0, 0, 1, 1); // Hintergrundfarbe
 

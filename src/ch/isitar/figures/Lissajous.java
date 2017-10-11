@@ -14,8 +14,8 @@ public class Lissajous implements Figure {
     private float amplitudeY = 1;
     private float omegaX = 1;
     private float omegaY = 1;
-    private int n = 100;
-    private float t;
+    private int n = 1000;
+    private float dt;
     private boolean increase;
     private Point color;
 
@@ -25,7 +25,7 @@ public class Lissajous implements Figure {
         this.amplitudeY = amplitudeY;
         this.omegaX = omegaX;
         this.omegaY = omegaY;
-        this.t = (float) ((2 * Math.PI) / (omegaX * n));
+        this.dt = (float) ((2 * Math.PI) / (omegaX * n));
         this.increase = increase;
         Random rnd = new Random();
         color = new Point(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat());
@@ -36,7 +36,7 @@ public class Lissajous implements Figure {
     public void draw(GL3 gl, MyGLBase1 mygl) {
         mygl.setColor(color.getX(), color.getY(), color.getZ());
         for (int i = 0; i < n; i++) {
-            mygl.putVertex(getX(i * t, amplitudeX, omegaX), getY(i * t, amplitudeY, omegaY, phi), 0);
+            mygl.putVertex(getX(i * dt, amplitudeX, omegaX), getY(i * dt, amplitudeY, omegaY, phi), 0);
         }
 
         mygl.copyBuffer(gl);

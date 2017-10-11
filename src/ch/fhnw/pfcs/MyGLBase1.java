@@ -4,7 +4,6 @@ package ch.fhnw.pfcs;
 //                                                              E.Gutknecht, August 2016
 import com.jogamp.opengl.*;
 import com.jogamp.common.nio.*;
-import java.util.*;
 import java.nio.*;
 import ch.fhnw.util.math.*; // Vektor- und Matrix-Algebra
 

@@ -1,6 +1,7 @@
 package ch.isitar.figures;
 
 import java.awt.event.KeyEvent;
+import java.util.Random;
 
 import com.jogamp.opengl.GL3;
 
@@ -13,8 +14,11 @@ public class U2Riffle implements Figure, KeyFigure {
     private double alpha;
     private double size;
     private FigureHolder figureHolder;
-    private double speed = 10;
+    private double speed = 20;
     private Point shootingPoint;
+    private Point color;
+
+    private boolean includeAirResistance = true;
 
     public U2Riffle(Point location, double alpha, double size, FigureHolder figureHolder) {
         this.location = location;
@@ -22,6 +26,8 @@ public class U2Riffle implements Figure, KeyFigure {
         this.size = size;
         this.figureHolder = figureHolder;
 
+        Random rnd = new Random();
+        color = new Point(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat());
         updateShootingPoint();
     }
 
@@ -53,12 +59,11 @@ public class U2Riffle implements Figure, KeyFigure {
     @Override
     public void keyTyped(KeyEvent e) {
         if (e.getKeyChar() == 'S' || e.getKeyChar() == 's') {
-
             double v0x = speed * Math.cos(alpha);
             double v0y = speed * Math.sin(alpha);
 
-            this.figureHolder.AddFigure(new WurfParabel(1, v0y, v0x, 0.01, 0, -PhysicStatics.g,
-                    new Circle(0.1, new Point(this.shootingPoint)), "", ""));
+            this.figureHolder.addFigure(new WurfParabel(1, v0y, v0x, 0.01, 0, -PhysicStatics.g,
+                    new Circle(0.2, new Point(this.shootingPoint)), "", "", includeAirResistance));
         }
 
         if (e.getKeyChar() == 'T' || e.getKeyChar() == 't') {
@@ -69,8 +74,9 @@ public class U2Riffle implements Figure, KeyFigure {
                 double v0x = speed * Math.cos(beta + i * delta);
                 double v0y = speed * Math.sin(beta + i * delta);
 
-                this.figureHolder.AddFigure(new WurfParabel(1, v0y, v0x, 0.01, 0, -PhysicStatics.g,
-                        new Circle(0.1, new Point(this.shootingPoint)), "", ""));
+                this.figureHolder.addFigure(new WurfParabel(1, v0y, v0x, 0.01, 0, -PhysicStatics.g,
+                        new Circle(0.1, new Point(this.shootingPoint)), "", "", includeAirResistance));
+
             }
         }
 
@@ -85,6 +91,8 @@ public class U2Riffle implements Figure, KeyFigure {
 
     @Override
     public void draw(GL3 gl, MyGLBase1 mygl) {
+        mygl.setColor(color.getX(), color.getY(), color.getZ());
+
         double width = size / 8;
         double beta = alpha - Math.PI / 2;
         float bottomLeftX = (float) (location.getX() + width * Math.cos(beta));

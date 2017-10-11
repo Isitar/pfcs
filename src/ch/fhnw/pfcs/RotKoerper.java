@@ -2,7 +2,6 @@ package ch.fhnw.pfcs;
 //  -------------   Rotations-Koerper  (Kugel, Torus, Zylinder)  ------------
 //                                                            E.Gutknecht, Juli 2015
 import com.jogamp.opengl.*;
-import com.jogamp.opengl.awt.*;
 
 public class RotKoerper
 {

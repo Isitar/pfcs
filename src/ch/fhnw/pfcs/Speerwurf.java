@@ -11,13 +11,13 @@ import com.jogamp.opengl.util.*;
 import ch.fhnw.util.math.*;
 import ch.isitar.figures.Figure;
 import ch.isitar.figures.KeyFigure;
-import ch.isitar.figures.Lissajous;
+import ch.isitar.figures.Spear;
 
-public class StarterClass implements WindowListener, GLEventListener, KeyListener {
+public class Speerwurf implements WindowListener, GLEventListener, KeyListener {
 
     // --------- globale Daten ---------------------------
 
-    String windowTitle = "Lissajous";
+    String windowTitle = "Speerwurf";
     int windowWidth = 800;
     int windowHeight = 800;
     String vShader = MyShaders.vShader1; // Vertex-Shader
@@ -25,15 +25,14 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
     int maxVerts = 10 * 1024; // max. Anzahl Vertices im Vertex-Array
     GLCanvas canvas; // OpenGL Window
     MyGLBase1 mygl; // eigene OpenGL-Basisfunktionen
-    private int lissajousFactor = 1;
-    private float lissajousSize = 7f;
+
     private ArrayList<Figure> figures;
-    private float boundaryY;
-    private float boundaryX;
+    private float boundaryY = 10;
+    private float boundaryX = 10;
     private float boundaryZ;
     // --------- Methoden ----------------------------------
 
-    public StarterClass() // Konstruktor
+    public Speerwurf() // Konstruktor
     {
         createFrame();
     }
@@ -68,17 +67,7 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
         mygl = new MyGLBase1(gl, programId, maxVerts); // OpenGL Basis-Funktionen
 
         figures = new ArrayList<>();
-        figures.add(new Lissajous(lissajousSize, lissajousSize, lissajousSize, 4 * lissajousSize, true));
-        // figures.add(new Circle(0.5f, 0, 0, 0));
-
-        // figures.add(new WurfParabel(0.1f, 3, 5, 0.04, 0, -PhysicStatics.g, new Circle(0.3, -8f, -6f, 0),
-        // "R", "S"));
-        // figures.add(new WurfParabel(0.1f, 4, 6, 0.04, 0, -PhysicStatics.g, new Circle(0.3, -8f, -6f, 0),
-        // "R", "S"));
-        // figures.add(new WurfParabel(0.1f, 5, 7, 0.04, 0, -PhysicStatics.g, new Circle(0.3, -8f, -6f, 0),
-        // "R", "S"));
-        // figures.add(new WurfParabel(0.1f, 6, 8, 0.04, 0, -PhysicStatics.g, new Circle(0.3, -8f, -6f, 0),
-        // "R", "S"));
+        figures.add(new Spear(5, 0.5, new Point(-boundaryX, -boundaryY, 0)));
         FPSAnimator anim = new FPSAnimator(canvas, 60, true);
         anim.start();
     }
@@ -102,14 +91,13 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
         GL3 gl = drawable.getGL().getGL3();
         // Set the viewport to be the entire window
         gl.glViewport(0, 0, width, height);
-        float xP = 10;
+
         float zP = 100;
         float aspect = (float) height / width;
-        float yP = xP * aspect;
-        Mat4 P = Mat4.ortho(-xP, xP, -yP, yP, -zP, zP);
+        float yP = boundaryX * aspect;
+        Mat4 P = Mat4.ortho(-boundaryX, boundaryX, -yP, yP, -zP, zP);
         mygl.setP(gl, P);
 
-        this.boundaryX = xP;
         this.boundaryY = yP;
         this.boundaryZ = zP;
     }
@@ -121,7 +109,7 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
     // ----------- main-Methode ---------------------------
 
     public static void main(String[] args) {
-        new StarterClass();
+        new Speerwurf();
     }
 
     // --------- Window-Events --------------------
@@ -161,23 +149,7 @@ public class StarterClass implements WindowListener, GLEventListener, KeyListene
 
     @Override
     public void keyTyped(KeyEvent e) {
-
         figures.stream().filter(f -> f instanceof KeyFigure).forEach(f -> ((KeyFigure) f).keyTyped(e));
-        if (e.getKeyChar() == 'n' || e.getKeyChar() == 'N') {
-            figures.clear();
-
-            figures.add(new Lissajous((float) (lissajousFactor * 0.1 + lissajousSize), lissajousSize, lissajousSize,
-                    lissajousSize, true));
-            lissajousFactor++;
-        }
-        if (e.getKeyChar() == 'm' || e.getKeyChar() == 'M') {
-            figures.clear();
-
-            figures.add(new Lissajous(lissajousSize, lissajousSize, lissajousSize,
-                    (float) (lissajousFactor * lissajousSize), true));
-            System.out.println(lissajousFactor);
-            lissajousFactor++;
-        }
     }
 
 }

@@ -5,6 +5,7 @@ import java.util.Random;
 import com.jogamp.opengl.GL3;
 
 import ch.fhnw.pfcs.MyGLBase1;
+import ch.fhnw.pfcs.PhysicStatics;
 import ch.fhnw.pfcs.Point;
 
 public class Circle implements ThrowableFigure {
@@ -66,4 +67,8 @@ public class Circle implements ThrowableFigure {
         this.p = p;
     }
 
+    @Override
+    public double getC() {
+        return PhysicStatics.airDensity / 2 * PhysicStatics.bulletC * Math.pow(radius, 2) * Math.PI;
+    }
 }

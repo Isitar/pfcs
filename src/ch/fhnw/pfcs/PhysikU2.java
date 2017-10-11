@@ -3,17 +3,16 @@ package ch.fhnw.pfcs;
 //  -------------   JOGL 2D-Programm  -------------------
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.*;
 import com.jogamp.opengl.util.*;
 import ch.fhnw.util.math.*;
-import ch.isitar.figures.Circle;
 import ch.isitar.figures.Figure;
 import ch.isitar.figures.KeyFigure;
-import ch.isitar.figures.Lissajous;
 import ch.isitar.figures.ThrowableFigure;
 import ch.isitar.figures.U2Blech;
 import ch.isitar.figures.U2Riffle;
@@ -33,10 +32,13 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
     GLCanvas canvas; // OpenGL Window
     MyGLBase1 mygl; // eigene OpenGL-Basisfunktionen
 
-    private ArrayList<Figure> figures;
+    private List<Figure> figures = new CopyOnWriteArrayList<Figure>();
     private float boundaryX = 10;
     private float boundaryY = 10;
+    @SuppressWarnings("unused")
     private float boundaryZ;
+    private String pauseKey = " ";
+    private boolean pause = false;
     // --------- Methoden ----------------------------------
 
     public PhysikU2() {
@@ -64,18 +66,17 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
     public void init(GLAutoDrawable drawable) // Initialisierung
     {
         GL3 gl = drawable.getGL().getGL3();
-        System.out.println("OpenGl Version: " + gl.glGetString(gl.GL_VERSION));
-        System.out.println("Shading Language: " + gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION));
+        System.out.println("OpenGl Version: " + gl.glGetString(GL.GL_VERSION));
+        System.out.println("Shading Language: " + gl.glGetString(GL2ES2.GL_SHADING_LANGUAGE_VERSION));
         System.out.println();
         gl.glClearColor(0.5f, 0.5f, 0.5f, 1); // Hintergrundfarbe
 
         int programId = MyShaders.initShaders(gl, vShader, fShader); // Compile/Link Shader-Programme
         mygl = new MyGLBase1(gl, programId, maxVerts); // OpenGL Basis-Funktionen
 
-        figures = new ArrayList<>();
         figures.add(new U2Riffle(new Point(-boundaryX + 1, -boundaryY + 1, 0), Math.PI / 4, 3, this));
-        figures.add(new WurfParabel(0.01, 0, 0, 0.01, 0, -PhysicStatics.g,
-                new U2Blech(new Point(boundaryX - 1, boundaryY - 1, 0), 1, 2), "R", "S"));
+        figures.add(new WurfParabel(0.5, 0, 0, 0.01, 0, -PhysicStatics.g,
+                new U2Blech(new Point(boundaryX - 1, boundaryY - 1, 0), 1, 2, this), "R", "S", true));
         FPSAnimator anim = new FPSAnimator(canvas, 60, true);
         anim.start();
     }
@@ -85,7 +86,9 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
         GL3 gl = drawable.getGL().getGL3();
         gl.glClear(GL3.GL_COLOR_BUFFER_BIT); // Bildschirm loeschen
         mygl.setColor(0, 1, 0); // Farbe der Vertices
-        figures.forEach(f -> f.update());
+        if (!pause) {
+            figures.forEach(f -> f.update());
+        }
         figures.forEach(f -> {
             mygl.rewindBuffer(gl); // Vertex-Buffer zuruecksetzen
             f.draw(gl, mygl);
@@ -163,13 +166,17 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
     @Override
     public void keyTyped(KeyEvent e) {
         try {
+            if (String.valueOf(e.getKeyChar()).toUpperCase().equals(pauseKey)) {
+                pause = !pause;
+            }
+
             figures.stream().filter(f -> f instanceof KeyFigure).forEach(f -> ((KeyFigure) f).keyTyped(e));
         } catch (ConcurrentModificationException ex) {
         }
     }
 
     @Override
-    public void AddFigure(Figure f) {
+    public void addFigure(Figure f) {
         if (this.figures.contains(f)) {
             return;
         }
@@ -177,11 +184,18 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
     }
 
     @Override
-    public void RemoveFigure(Figure f) {
+    public void removeFigure(Figure f) {
         if (!this.figures.contains(f)) {
             return;
         }
         this.figures.remove(f);
+        System.out.println("executed");
     }
 
+    @Override
+    public List<Figure> getFigures() {
+
+        return this.figures;
+
+    }
 }

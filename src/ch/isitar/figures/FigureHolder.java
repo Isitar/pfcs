@@ -1,7 +1,11 @@
 package ch.isitar.figures;
 
-public interface FigureHolder {
-    public void AddFigure(Figure f);
+import java.util.List;
 
-    public void RemoveFigure(Figure f);
+public interface FigureHolder {
+    public void addFigure(Figure f);
+
+    public void removeFigure(Figure f);
+
+    public List<Figure> getFigures();
 }
