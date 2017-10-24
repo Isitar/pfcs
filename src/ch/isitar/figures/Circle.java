@@ -25,13 +25,17 @@ public class Circle implements ThrowableFigure {
         this(radius, new Point(x, y, z));
     }
 
+    static Random rnd = new Random();
+
     public Circle(double radius, Point p) {
+        this(radius, p, new Point(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat()));
+    }
+
+    public Circle(double radius, Point p, Point color) {
         super();
         this.radius = radius;
         this.p = p;
-
-        Random rnd = new Random();
-        color = new Point(rnd.nextFloat(), rnd.nextFloat(), rnd.nextFloat());
+        this.color = color;
     }
 
     @Override

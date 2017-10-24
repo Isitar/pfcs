@@ -3,23 +3,24 @@ package ch.fhnw.pfcs;
 //  -------------   JOGL 3D-Programm  -------------------
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Stack;
+import java.util.ArrayList;
 
 import com.jogamp.opengl.*;
 import ch.fhnw.util.math.*;
-import ch.isitar.figures.Circle;
+import ch.isitar.figures.Bumerang;
+import ch.isitar.figures.Figure;
 
 import com.jogamp.opengl.awt.*;
 import com.jogamp.opengl.util.FPSAnimator;
 
-public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
+public class StartBumerang implements WindowListener, GLEventListener, KeyListener {
 
     // --------- globale Daten ---------------------------
 
     String windowTitle = "JOGL-Application";
     int windowWidth = 800;
     int windowHeight = 600;
-    String vShader = MyShaders.vShader2; // Vertex-Shader mit Transformations-Matrizen
+    String vShader = MyShaders.vShader1; // Vertex-Shader mit Transformations-Matrizen
     String fShader = MyShaders.fShader0; // Fragment-Shader
     int maxVerts = 2048; // max. Anzahl Vertices im Vertex-Array
     GLCanvas canvas; // OpenGL Window
@@ -34,10 +35,8 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
     Mat4 M; // ModelView-Matrix
     Mat4 P; // Projektions-Matrix
 
-    Stack<Mat4> matrixStack = new Stack<>();
-
     // -------- Viewing-Volume ---------------
-    float left = -4f, right = 4f;
+    float left = -10f, right = 10f;
     float bottom, top;
     float near = -10, far = 1000;
 
@@ -46,11 +45,11 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
     Vec3 B = new Vec3(0, 0, 0); // Zielpunkt
     Vec3 up = new Vec3(0, 1, 0); // up-Richtung
 
-    boolean cameraIsLight = true;
+    ArrayList<Figure> figures = new ArrayList<Figure>();
 
     // --------- Methoden ----------------------------------
 
-    public MyFirst3D() // Konstruktor
+    public StartBumerang() // Konstruktor
     {
         createFrame();
     }
@@ -102,9 +101,8 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
         mygl = new MyGLBase1(gl, programId, maxVerts);
         quad = new Quader(mygl);
         rotk = new RotKoerper(mygl);
+        figures.add(new Bumerang());
     }
-
-    Circle lightBulb = new Circle(0.4f, new Point(0, 0, 0), new Point(1, 1, 1));
 
     @Override
     public void display(GLAutoDrawable drawable) {
@@ -114,36 +112,21 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
         Mat4 R1 = Mat4.rotate(-elevation, 1, 0, 0);
         Mat4 R2 = Mat4.rotate(azimut, 0, 1, 0);
         Mat4 R = R1.preMultiply(R2);
+        Mat4 V = Mat4.lookAt(R.transform(A), B, R.transform(up));
 
-        M = Mat4.lookAt(R.transform(A), B, R.transform(up));
-        matrixStack.push(M);
-        mygl.setM(gl, M); // Blickrichtung A --> B
+        mygl.setM(gl, V); // Blickrichtung A --> B
         mygl.setColor(1, 1, 1);
-        mygl.setShadingLevel(gl, 0);
         mygl.drawAxis(gl, 2, 2, 2); // Koordinatenachsen
-
-        if (cameraIsLight) {
-            M = Mat4.ID;
-            matrixStack.push(M);
-            mygl.setM(gl, matrixStack.pop());
-        }
-        mygl.setLightPosition(gl, 2, 4, 4); // changed
-        // matrixStack.push(M.postMultiply(Mat4.translate(mygl.getLightPosition()[0],
-        // mygl.getLightPosition()[1], mygl.getLightPosition()[2])));
-        // mygl.setM(gl, matrixStack.pop());
-        // lightBulb.draw(gl, mygl);
-        mygl.setM(gl, matrixStack.pop());
-
-        mygl.setShadingParam(gl, 0.2f, 0.8f);
-        mygl.setShadingLevel(gl, 1);
-        // mygl.setColor(1, 0, 0);
-        // zeichneDreieck(gl, -1, 0.3f, 0.5f, 2.8f, 0, -1, 1f, 1.5F, -1);
-        // mygl.setColor(1, 1, 0);
-        // zeichneDreieck(gl, -0.4f, 0.2f, -1, 3, 2, 3, -1.8f, 1f, -1);
+        mygl.setLightPosition(gl, -2, 2, 2);
+        mygl.setColor(1, 0, 0);
+        zeichneDreieck(gl, -1, 0.3f, 0.5f, 2.8f, 0, -1, 1f, 1.5F, -1);
         mygl.setColor(1, 1, 0);
-        // quad.zeichne(gl, 0.8f, 1.5f, 1.6f, true);
-        rotk.zeichneKugel(gl, 0.8f, 20, 20, true);
+        zeichneDreieck(gl, -0.4f, 0.2f, -1, 3, 2, 3, -1.8f, 1f, -1);
 
+        for (Figure figure : figures) {
+            figure.update();
+            figure.draw(gl, mygl);
+        }
     }
 
     @Override
@@ -164,7 +147,7 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
     // ----------- main-Methode ---------------------------
 
     public static void main(String[] args) {
-        new MyFirst3D();
+        new StartBumerang();
     }
 
     // --------- Window-Events --------------------
@@ -216,4 +199,5 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
             azimut++;
         }
     }
+
 }

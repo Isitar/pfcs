@@ -41,7 +41,6 @@ public class Lissajous implements Figure {
 
         mygl.copyBuffer(gl);
         mygl.drawArrays(gl, GL3.GL_LINE_LOOP);
-
     }
 
     @Override
