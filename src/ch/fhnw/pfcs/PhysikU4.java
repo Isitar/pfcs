@@ -41,7 +41,7 @@ public class PhysikU4 implements WindowListener, GLEventListener, KeyListener, F
     private boolean pause = false;
 
     private double cilinderRadius = 2;
-    private int currTime = 0; // value between 0 and modul
+    private int currTime = 0; 
     private int modulLength = 8;
 
     private Consumer<double[]> vectorFieldCilinder = (double[] x) -> {
