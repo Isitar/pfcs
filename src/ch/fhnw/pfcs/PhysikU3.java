@@ -11,19 +11,16 @@ import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.*;
 import com.jogamp.opengl.util.*;
 import ch.fhnw.util.math.*;
+import ch.isitar.figures.Bumerang;
 import ch.isitar.figures.Figure;
-import ch.isitar.figures.KeyFigure;
 import ch.isitar.figures.ThrowableFigure;
-import ch.isitar.figures.U2Blech;
-import ch.isitar.figures.U2Riffle;
-import ch.isitar.figures.WurfParabel;
 import ch.isitar.figures.FigureHolder;
 
-public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, FigureHolder {
+public class PhysikU3 implements WindowListener, GLEventListener, KeyListener, FigureHolder {
 
     // --------- globale Daten ---------------------------
 
-    String windowTitle = "Physik U2";
+    String windowTitle = "Physik U3 - Bumerang";
     int windowWidth = 800;
     int windowHeight = 800;
     String vShader = MyShaders.vShader1; // Vertex-Shader
@@ -41,7 +38,7 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
     private boolean pause = false;
     // --------- Methoden ----------------------------------
 
-    public PhysikU2() {
+    public PhysikU3() {
         createFrame();
     }
 
@@ -74,9 +71,8 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
         int programId = MyShaders.initShaders(gl, vShader, fShader); // Compile/Link Shader-Programme
         mygl = new MyGLBase1(gl, programId, maxVerts); // OpenGL Basis-Funktionen
 
-        figures.add(new U2Riffle(new Point(-boundaryX + 1, -boundaryY + 1, 0), Math.PI / 4, 3, this));
-        figures.add(new WurfParabel(0.5, 0, 0, 0.01, 0, -PhysicStatics.g,
-                new U2Blech(new Point(boundaryX - 1, boundaryY - 1, 0), 1, 2, this), "R", "S", true));
+        figures.add(new Bumerang());
+
         FPSAnimator anim = new FPSAnimator(canvas, 60, true);
         anim.start();
     }
@@ -125,7 +121,7 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
     // ----------- main-Methode ---------------------------
 
     public static void main(String[] args) {
-        new PhysikU2();
+        new PhysikU3();
     }
 
     // --------- Window-Events --------------------
@@ -155,12 +151,12 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
 
     @Override
     public void keyPressed(KeyEvent e) {
-        figures.stream().filter(f -> f instanceof KeyListener).forEach(f -> ((KeyFigure) f).keyPressed(e));
+        figures.stream().filter(f -> f instanceof KeyListener).forEach(f -> ((KeyListener) f).keyPressed(e));
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        figures.stream().filter(f -> f instanceof KeyListener).forEach(f -> ((KeyFigure) f).keyReleased(e));
+        figures.stream().filter(f -> f instanceof KeyListener).forEach(f -> ((KeyListener) f).keyReleased(e));
     }
 
     @Override
@@ -170,7 +166,7 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
                 pause = !pause;
             }
 
-            figures.stream().filter(f -> f instanceof KeyFigure).forEach(f -> ((KeyFigure) f).keyTyped(e));
+            figures.stream().filter(f -> f instanceof KeyListener).forEach(f -> ((KeyListener) f).keyTyped(e));
         } catch (ConcurrentModificationException ex) {
         }
     }

@@ -32,7 +32,8 @@ public class Keppler implements WindowListener, GLEventListener, KeyListener {
     private float boundaryX = 60;
     private float boundaryZ;
 
-    private double v0x = 0, v0y = 0.00295;
+    private double x0 = 42;
+    private double v0x = 0, v0y = Math.sqrt(GM/x0);
     private double vx = v0x, vy = v0y;
     private final double dt = 5000;
     private int counter = 0;
@@ -46,7 +47,7 @@ public class Keppler implements WindowListener, GLEventListener, KeyListener {
 
     private ArrayList<Point> lineArr = new ArrayList<>();
 
-    private Point SatelitePoint = new Point(42, 0, 0);
+    private Point SatelitePoint = new Point(x0, 0, 0);
 
     // --------- Methoden ----------------------------------
 

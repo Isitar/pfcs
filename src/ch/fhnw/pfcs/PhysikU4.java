@@ -6,24 +6,24 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.*;
 import com.jogamp.opengl.util.*;
+
+import ch.fhnw.pfcs.helpers.Dynamics;
 import ch.fhnw.util.math.*;
+import ch.isitar.figures.Circle;
 import ch.isitar.figures.Figure;
 import ch.isitar.figures.KeyFigure;
-import ch.isitar.figures.ThrowableFigure;
-import ch.isitar.figures.U2Blech;
-import ch.isitar.figures.U2Riffle;
-import ch.isitar.figures.WurfParabel;
 import ch.isitar.figures.FigureHolder;
 
-public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, FigureHolder {
+public class PhysikU4 implements WindowListener, GLEventListener, KeyListener, FigureHolder {
 
     // --------- globale Daten ---------------------------
 
-    String windowTitle = "Physik U2";
+    String windowTitle = "Physik U4";
     int windowWidth = 800;
     int windowHeight = 800;
     String vShader = MyShaders.vShader1; // Vertex-Shader
@@ -39,9 +39,23 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
     private float boundaryZ;
     private String pauseKey = " ";
     private boolean pause = false;
+
+    private double cilinderRadius = 2;
+    private int currTime = 0; // value between 0 and modul
+    private int modulLength = 8;
+
+    private Consumer<double[]> vectorFieldCilinder = (double[] x) -> {
+        double x2 = Math.pow(x[0], 2);
+        double y2 = Math.pow(x[1], 2);
+        double r2 = Math.pow(cilinderRadius, 2);
+        double newX = 1 + (r2 / (x2 + y2)) - (2 * r2 * x2) / Math.pow(x2 + y2, 2);
+        double newY = -(2 * r2 * x[0] * x[1]) / Math.pow(x2 + y2, 2);
+        x[0] = newX;
+        x[1] = newY;
+    };
     // --------- Methoden ----------------------------------
 
-    public PhysikU2() {
+    public PhysikU4() {
         createFrame();
     }
 
@@ -74,9 +88,6 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
         int programId = MyShaders.initShaders(gl, vShader, fShader); // Compile/Link Shader-Programme
         mygl = new MyGLBase1(gl, programId, maxVerts); // OpenGL Basis-Funktionen
 
-        figures.add(new U2Riffle(new Point(-boundaryX + 1, -boundaryY + 1, 0), Math.PI / 4, 3, this));
-        figures.add(new WurfParabel(0.5, 0, 0, 0.01, 0, -PhysicStatics.g,
-                new U2Blech(new Point(boundaryX - 1, boundaryY - 1, 0), 1, 2, this), "R", "S", true));
         FPSAnimator anim = new FPSAnimator(canvas, 60, true);
         anim.start();
     }
@@ -86,20 +97,47 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
         GL3 gl = drawable.getGL().getGL3();
         gl.glClear(GL3.GL_COLOR_BUFFER_BIT); // Bildschirm loeschen
         mygl.setColor(0, 1, 0); // Farbe der Vertices
-        if (!pause) {
-            figures.forEach(f -> f.update());
+        mygl.rewindBuffer(gl);
+        new Circle(cilinderRadius, new Point(0, 0, 0), new Point(1, 0, 0)).draw(gl, mygl);
+        mygl.rewindBuffer(gl);
+        mygl.setColor(0, 1, 0);
+        double deltaAbstand = 0.1;
+        for (int i = 0; i < 100; ++i) {
+            drawLine(gl, mygl, -boundaryX, deltaAbstand* i, 600, 0.1);
+            drawLine(gl, mygl, -boundaryX, -deltaAbstand * i, 600, 0.1);
         }
-        figures.forEach(f -> {
-            mygl.rewindBuffer(gl); // Vertex-Buffer zuruecksetzen
-            f.draw(gl, mygl);
-        });
+        currTime++;
+    }
 
-        figures.parallelStream().filter(f -> f instanceof ThrowableFigure).forEach(f -> {
-            if (((ThrowableFigure) f).getPoint().getY() < -10 * boundaryY) {
-                figures.remove(f);
+    private void drawLine(GL3 gl, MyGLBase1 mygl, double startX, double startY, int steps, double dt) {
+        mygl.rewindBuffer(gl);
+
+        boolean draw = currTime == 0;
+        if (draw) {
+            mygl.setColor(0, 0, 0);
+        } else {
+            mygl.setColor(1, 0, 1);
+        }
+        mygl.putVertex((float) startX, (float) startY, 0);
+
+        double[] x = { startX, startY };
+
+        for (int i = 1; i <= steps; ++i) {
+            x = Dynamics.rungeKutta(x, dt, vectorFieldCilinder);
+
+            draw = (currTime - i) % modulLength > (modulLength / 2);
+
+            if (draw) {
+                mygl.setColor(0, 1, 0);
+            } else {
+                mygl.setColor(0, 0, 0);
             }
-        });
-        ;
+
+            mygl.putVertex((float) x[0], (float) x[1], 0);
+        }
+        mygl.copyBuffer(gl);
+        mygl.drawArrays(gl, GL3.GL_LINE_STRIP);
+
     }
 
     @Override
@@ -125,7 +163,7 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
     // ----------- main-Methode ---------------------------
 
     public static void main(String[] args) {
-        new PhysikU2();
+        new PhysikU4();
     }
 
     // --------- Window-Events --------------------
@@ -155,12 +193,12 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
 
     @Override
     public void keyPressed(KeyEvent e) {
-        figures.stream().filter(f -> f instanceof KeyListener).forEach(f -> ((KeyFigure) f).keyPressed(e));
+        figures.stream().filter(f -> f instanceof KeyFigure).forEach(f -> ((KeyFigure) f).keyPressed(e));
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        figures.stream().filter(f -> f instanceof KeyListener).forEach(f -> ((KeyFigure) f).keyReleased(e));
+        figures.stream().filter(f -> f instanceof KeyFigure).forEach(f -> ((KeyFigure) f).keyReleased(e));
     }
 
     @Override
@@ -169,7 +207,15 @@ public class PhysikU2 implements WindowListener, GLEventListener, KeyListener, F
             if (String.valueOf(e.getKeyChar()).toUpperCase().equals(pauseKey)) {
                 pause = !pause;
             }
-
+            if (e.getKeyChar() == 'i') {
+                currTime++;
+            }
+            if (e.getKeyChar() == 'r') {
+                cilinderRadius += 0.5;
+            }
+            if (e.getKeyChar() == 'R') {
+                cilinderRadius -= 0.5;
+            }
             figures.stream().filter(f -> f instanceof KeyFigure).forEach(f -> ((KeyFigure) f).keyTyped(e));
         } catch (ConcurrentModificationException ex) {
         }

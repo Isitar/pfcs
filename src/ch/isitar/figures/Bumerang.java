@@ -13,13 +13,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 /**
-*
-* @author Janik
-*/
+ *
+ * @author Janik
+ */
 public class Bumerang implements Figure, KeyListener {
 
     final double m = 1;
-    double v0 = 15;
+    double v0 = 60;
     final double dt = 500;
     double x = 0;
     double y = 0;
@@ -27,8 +27,8 @@ public class Bumerang implements Figure, KeyListener {
     double y0 = 0;
     double ax = 0;
     double ay = 0;
-    double v0x = 0;   // Anfangsgeschw.
-    double v0y = 0.003;   // Anfangsgeschw.
+    double v0x = 0; // Anfangsgeschw.
+    double v0y = 0.003; // Anfangsgeschw.
     double vx = v0x;
     double vy = v0y;
 
@@ -37,6 +37,7 @@ public class Bumerang implements Figure, KeyListener {
     double rB = 1; // radius Bumerang
     double rC = 7; // radius Flugbahn
     double phi = 20;
+    double deltaPhi = 1;
 
     int counter = 0;
 
@@ -48,20 +49,10 @@ public class Bumerang implements Figure, KeyListener {
     @Override
     public void update() {
         counter++;
-        System.out.println("" + counter + "(" + x + "," + y + ")");
+        // System.out.println(counter + "(" + x + "," + y + ")");
 
-        //double r = Math.sqrt(x * x + y * y);
-        //double r3 = r * r * r;
-        //ax = -GM * x / r3;
-        //ay = -GM * y / r3;
-        phi += 1;
+        phi += deltaPhi;
         phi = phi % 360;
-
-        /*vx += ax * dt;
-        vy += ay * dt;
-
-        x = x + vx * dt;
-        y = y + vy * dt;*/
     }
 
     @Override
@@ -69,33 +60,16 @@ public class Bumerang implements Figure, KeyListener {
         Mat4 mSave = mygl.getM();
 
         Mat4 M = Mat4.ID;
-                
-        // rotation für kreisbewegung
-        M = M.postMultiply(Mat4.rotate((float) phi, 0, 1, 0));
-        
-        // versetzen um Radius der Kreisbahn
-        M = M.postMultiply(Mat4.translate((float) rC, 0, 0));
-        
-         // rotation, damit der Bumerang nicht genau zum Bahnmittelpunkt schaut
-        M = M.postMultiply(Mat4.rotate((float) -20, 0, 0, 1));
-        
-        // Senkrecht stellen des Bumerang
-        M = M.postMultiply(Mat4.rotate((float) 90, 0, 1, 0));
-        
-        // Drehung der waagrechten Umlaufbahn
-        M = M.preMultiply(Mat4.rotate((float) -20, 0, 0, 1));
 
+        M = M.postMultiply(Mat4.rotate((float) phi, 0, 1, 0));
+        M = M.postMultiply(Mat4.translate((float) rC, 0, 0));
+        M = M.postMultiply(Mat4.rotate((float) -20, 0, 0, 1));
+        M = M.postMultiply(Mat4.rotate((float) 90, 0, 1, 0));
+        M = M.preMultiply(Mat4.rotate((float) -20, 0, 0, 1));
+        M = M.postMultiply(Mat4.rotate((float) (10 * phi + 10 * deltaPhi), 0, 0, 1));
         mygl.setM(gl, M);
 
-        mygl.setColor(0.8f, 0.8f, 0.8f);
-        /*for (float[] shot : shots) {
-            drawSpear(gl, mygl, shot[0], shot[1], 1f);
-        }*/
-
-        //drawSpear(gl, mygl, 1.2f, 0.2f, 0.1f);
         drawCircle(gl, mygl, (float) rB, 0, 0, 0);
-
-        //drawGun(gl, mygl);
         mygl.setM(gl, mSave);
     }
 
@@ -105,8 +79,11 @@ public class Bumerang implements Figure, KeyListener {
         double phi = 2 * Math.PI / nPkte;
         double x;
         double y;
+        mygl.setColor(1f, 0.9f, 0f);
         mygl.putVertex(xm, ym, 0);
+
         for (int i = 0; i <= nPkte; i++) {
+            mygl.setColor(1f, 0.9f - (i * 0.01f), 0f);
             x = xm + r * Math.cos(i * phi);
             y = ym + r * Math.sin(i * phi);
             mygl.putVertex((float) x, (float) y, z);
@@ -122,21 +99,17 @@ public class Bumerang implements Figure, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-        switch (key) {
-            case KeyEvent.VK_UP:
-                //directionSpear += Math.PI / 90;
-                break;
-            case KeyEvent.VK_DOWN:
-                //directionSpear -= Math.PI / 90;
-                break;
-            case KeyEvent.VK_SUBTRACT:
-                v0 -= 1;
-                v0 = Math.max(v0, 0);
-                break;
-            case KeyEvent.VK_ADD:
-                v0 += 1;
-                break;
+
+        switch (e.getKeyChar()) {
+        case 'd':
+            deltaPhi -= 1;
+            deltaPhi = Math.max(deltaPhi, 0);
+            System.out.println("new deltaPhi " + deltaPhi);
+            break;
+        case 'u':
+            System.out.println("new deltaPhi " + deltaPhi);
+            deltaPhi += 1;
+            break;
         }
     }
 

@@ -3,6 +3,7 @@ package ch.fhnw.pfcs;
 //  -------------   JOGL 3D-Programm  -------------------
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.Stack;
 
 import com.jogamp.opengl.*;
@@ -12,11 +13,11 @@ import ch.isitar.figures.Circle;
 import com.jogamp.opengl.awt.*;
 import com.jogamp.opengl.util.FPSAnimator;
 
-public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
+public class World3D implements WindowListener, GLEventListener, KeyListener {
 
     // --------- globale Daten ---------------------------
 
-    String windowTitle = "JOGL-Application";
+    String windowTitle = "World with moon";
     int windowWidth = 800;
     int windowHeight = 600;
     String vShader = MyShaders.vShader2; // Vertex-Shader mit Transformations-Matrizen
@@ -27,7 +28,7 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
 
     float elevation = 10;
     float azimut = 40;
-
+    float phi = 0;
     Quader quad;
     RotKoerper rotk;
 
@@ -36,21 +37,37 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
 
     Stack<Mat4> matrixStack = new Stack<>();
 
-    // -------- Viewing-Volume ---------------
-    float left = -4f, right = 4f;
-    float bottom, top;
-    float near = -10, far = 1000;
-
     // LookAt-Parameter fuer Kamera-System
-    Vec3 A = new Vec3(0, 0, 4); // Kamera-Pos. (Auge)
+    Vec3 A = new Vec3(0, 0, 50); // Kamera-Pos. (Auge)
     Vec3 B = new Vec3(0, 0, 0); // Zielpunkt
-    Vec3 up = new Vec3(0, 1, 0); // up-Richtung
+    Vec3 up = new Vec3(0, 50, 0); // up-Richtung
 
     boolean cameraIsLight = false;
 
+    // in this context, we are in 1/1000
+    // private double x0 = 385; //moon avg distance
+    private double x0 = 40; // moon avg distance
+    private double v0x = 0;
+    private double v0y = Math.sqrt(GM / x0);
+    // private double v0y = 0.001022;
+    private double vx = v0x, vy = v0y;
+    private final double dt = 1200;
+
+    private final static double g = 9.81e-6;
+    private final static double earthRadius = 6.378;
+    private final static double GM = g * earthRadius * earthRadius;
+    private final static double moonRadius = 1.737;
+
+    private Point SatelitePoint = new Point(x0, 0, 0);
+
+    // -------- Viewing-Volume ---------------
+    float left = (float) (-x0 - 10), right = (float) (x0 + 10);
+    float bottom, top;
+    float near = (float) (-x0 - 10), far = 1000;
+
     // --------- Methoden ----------------------------------
 
-    public MyFirst3D() // Konstruktor
+    public World3D() // Konstruktor
     {
         createFrame();
     }
@@ -97,7 +114,7 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
         System.out.println("Shading Language: " + gl.glGetString(GL2ES2.GL_SHADING_LANGUAGE_VERSION));
         System.out.println();
         gl.glEnable(GL3.GL_DEPTH_TEST);
-        gl.glClearColor(0, 0, 1, 1);
+        gl.glClearColor(0, 0, 0, 1);
         int programId = MyShaders.initShaders(gl, vShader, fShader);
         mygl = new MyGLBase1(gl, programId, maxVerts);
         quad = new Quader(mygl);
@@ -116,33 +133,67 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
         Mat4 R = R1.preMultiply(R2);
 
         M = Mat4.lookAt(R.transform(A), B, R.transform(up));
+        Mat4 origM = M;
         matrixStack.push(M);
         mygl.setM(gl, M); // Blickrichtung A --> B
         mygl.setColor(1, 1, 1);
         mygl.setShadingLevel(gl, 0);
-        mygl.drawAxis(gl, 2, 2, 2); // Koordinatenachsen
 
         if (cameraIsLight) {
             M = Mat4.ID;
             matrixStack.push(M);
             mygl.setM(gl, matrixStack.pop());
         }
-        mygl.setLightPosition(gl, 2, 4, 4); // changed
+        mygl.setLightPosition(gl, 50, 4, 4); // changed
         // matrixStack.push(M.postMultiply(Mat4.translate(mygl.getLightPosition()[0],
         // mygl.getLightPosition()[1], mygl.getLightPosition()[2])));
         // mygl.setM(gl, matrixStack.pop());
-        lightBulb.draw(gl, mygl);
-        mygl.setM(gl, matrixStack.pop());
-
+        // lightBulb.draw(gl, mygl);
         mygl.setShadingParam(gl, 0.2f, 0.8f);
         mygl.setShadingLevel(gl, 1);
-        // mygl.setColor(1, 0, 0);
-        // zeichneDreieck(gl, -1, 0.3f, 0.5f, 2.8f, 0, -1, 1f, 1.5F, -1);
-        // mygl.setColor(1, 1, 0);
-        // zeichneDreieck(gl, -0.4f, 0.2f, -1, 3, 2, 3, -1.8f, 1f, -1);
-        mygl.setColor(1, 1, 0);
-        // quad.zeichne(gl, 0.8f, 1.5f, 1.6f, true);
-        rotk.zeichneKugel(gl, 0.8f, 20, 20, true);
+        mygl.setColor(0, 0.5f, 1);
+
+        matrixStack.push(M.postMultiply(Mat4.rotate(phi, 0, 1, 0)));
+        phi++;
+        M = matrixStack.pop();
+        mygl.setM(gl, M);
+
+        gl.glEnable(GL.GL_POLYGON_OFFSET_FILL);
+        gl.glPolygonOffset(1, 1);
+        rotk.zeichneKugel(gl, (float) earthRadius, 30, 30, true);
+        mygl.setColor(0, 1, 1);
+        rotk.zeichneKugel(gl, (float) earthRadius, 30, 30, false);
+
+        SatelitePoint.setX(SatelitePoint.getXDouble() + vx * dt);
+        SatelitePoint.setY(SatelitePoint.getYDouble() + vy * dt);
+
+        double ax = -GM * SatelitePoint.getXDouble() / Math.pow(SatelitePoint.getLength(), 3);
+        vx += ax * dt;
+        double ay = -GM * SatelitePoint.getYDouble() / Math.pow(SatelitePoint.getLength(), 3);
+        vy += ay * dt;
+
+        Mat4 translated = Mat4.translate(new Vec3(SatelitePoint.getX(), SatelitePoint.getY(), SatelitePoint.getZ()));
+        M = origM;
+        M = M.postMultiply(Mat4.rotate(-90, 1, 0, 0));
+        M = M.postMultiply(Mat4.rotate(-90, 0, 0, 1));
+        M = M.postMultiply(translated);
+
+
+        mygl.setM(gl, M);
+        mygl.setColor(1, 1, 1);
+        mygl.drawAxis(gl, 50, 50, 50); // Koordinatenachsen
+        rotk.zeichneKugel(gl, (float) moonRadius, 30, 30, true);
+
+        M = matrixStack.pop();
+        mygl.setM(gl, M);
+
+        matrixStack.push(M);
+        mygl.drawAxis(gl, 50, 50, 50); // Koordinatenachsen
+        mygl.setM(gl, matrixStack.pop());
+
+        // Circle c = new Circle(moonRadius, new Point(SatelitePoint), new Point(1, 1, 1));
+        // mygl.rewindBuffer(gl);
+        // c.draw(gl, mygl);
 
     }
 
@@ -164,7 +215,7 @@ public class MyFirst3D implements WindowListener, GLEventListener, KeyListener {
     // ----------- main-Methode ---------------------------
 
     public static void main(String[] args) {
-        new MyFirst3D();
+        new World3D();
     }
 
     // --------- Window-Events --------------------
