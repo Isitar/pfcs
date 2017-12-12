@@ -98,8 +98,8 @@ public class PhysikU4 implements WindowListener, GLEventListener, KeyListener, F
 		int programId = MyShaders.initShaders(gl, vShader, fShader); // Compile/Link Shader-Programme
 		mygl = new MyGLBase1(gl, programId, maxVerts); // OpenGL Basis-Funktionen
 
-		anim = new FPSAnimator(canvas, 60, true);
-
+		anim = new FPSAnimator(canvas, 600, true);
+		
 		anim.start();
 	}
 
