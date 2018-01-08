@@ -26,7 +26,7 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 	int maxVerts = 2048; // max. Anzahl Vertices im Vertex-Array
 	GLCanvas canvas; // OpenGL Window
 	MyGLBase1 mygl; // OpenGL Basis-Funktionen¨
-
+	double quadA = 1.5, quadB = 1.3, quadC = 1.3;
 	float elevation = 10;
 	float azimut = 40;
 
@@ -48,8 +48,8 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 	Vec3 B = new Vec3(0, 0, 0); // Zielpunkt
 	Vec3 up = new Vec3(0, 1, 0); // up-Richtung
 
-	double x = 0, dx = 0.0; // Quader position
-	double quadA = 1.5, quadB = 1.3, quadC = 1.3;
+	double x = 0, dx = 0; // Quader position
+
 	GyroDynamics gdQuad;
 
 	// Quaternion qStart = Quaternion.fromAxis(new Vec3(1, 0, 0), 10);
@@ -58,6 +58,14 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 
 	boolean cameraIsLight = false;
 
+	// quader-options, 27
+	double[][] options = { { 1, 1, 1 }, { 1, 1, 0.75 }, { 1, 1, 0.5 }, { 1, 0.75, 1 }, { 1, 0.75, 0.75 },
+			{ 1, 0.75, 0.5 }, { 1, 0.5, 1 }, { 1, 0.5, 0.75 }, { 1, 0.5, 0.5 }, { 0.75, 1, 1 }, { 0.75, 1, 0.75 },
+			{ 0.75, 1, 0.5 }, { 0.75, 0.75, 1 }, { 0.75, 0.75, 0.75 }, { 0.75, 0.75, 0.5 }, { 0.75, 0.5, 1 },
+			{ 0.75, 0.5, 0.75 }, { 0.75, 0.5, 0.5 }, { 0.5, 1, 1 }, { 0.5, 1, 0.75 }, { 0.5, 1, 0.5 }, { 0.5, 0.75, 1 },
+			{ 0.5, 0.75, 0.75 }, { 0.5, 0.75, 0.5 }, { 0.5, 0.5, 1 }, { 0.5, 0.5, 0.75 }, { 0.5, 0.5, 0.5 } };
+
+	int globalIndex = 0;
 	// --------- Methoden ----------------------------------
 
 	public PhysikU5() // Konstruktor
@@ -98,11 +106,20 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		mygl = new MyGLBase1(gl, programId, maxVerts);
 		quad = new Quader(mygl);
 		rotk = new RotKoerper(mygl);
+		drawQuad(0);
+	}
+
+	private void setQuadOptions(double[] params) {
+		quadA = params[0];
+		quadB = params[1];
+		quadC = params[2];
+	}
+
+	private void instanciateGdQuad() {
 		double paramA = (quadA * quadA + quadB * quadB) / 12;
 		double paramB = (quadA * quadA + quadC * quadC) / 12;
 		double paramC = (quadB * quadB + quadC * quadC) / 12;
 		gdQuad = new GyroDynamics(paramA, paramB, paramC);
-		gdQuad.setState(1, 2, 4, 30, 3, 1, 2);
 	}
 
 	Circle lightBulb = new Circle(0.4f, new Point(0, 0, 0), new Point(1, 1, 1));
@@ -132,7 +149,7 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		// matrixStack.push(M.postMultiply(Mat4.translate(mygl.getLightPosition()[0],
 		// myglad.getLightPosition()[1], mygl.getLightPosition()[2])));
 		// mygl.setM(gl, matrixStack.pop());
-		lightBulb.draw(gl, mygl);
+		// lightBulb.draw(gl, mygl);
 		M = matrixStack.pop();
 		mygl.setM(gl, M);
 
@@ -239,5 +256,31 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		if ((e.getKeyChar() == 'H') || (e.getKeyChar() == 'h')) {
 			gdQuad.move(0.1);
 		}
+
+		if ((e.getKeyChar() == ' ')) {
+			if (dx == 0) {
+				dx = 0.01;
+			} else {
+				dx = 0;
+			}
+		}
+
+		if ((e.getKeyChar() == 'n')) {
+			drawQuad(++globalIndex % options.length);
+		}
+
+		int keyInt = e.getKeyChar() - '0';
+		if (keyInt <= 9 && keyInt >= 0) {
+			drawQuad(keyInt);
+		}
+	}
+
+	private void drawQuad(int index) {
+		double[] params = options[index];
+		setQuadOptions(params);
+		instanciateGdQuad();
+		gdQuad.setState(1, 1, 1, 0, 1, 1, 1);
+		x = 0;
+		globalIndex = index;
 	}
 }
