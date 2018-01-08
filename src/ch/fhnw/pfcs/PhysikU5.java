@@ -3,9 +3,13 @@ package ch.fhnw.pfcs;
 //  -------------   JOGL 3D-Programm  -------------------
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Stack;
-
+import java.util.*;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 import com.jogamp.opengl.*;
+
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 
 import ch.fhnw.pfcs.helpers.GyroDynamics;
 import ch.fhnw.util.math.*;
@@ -89,6 +93,31 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		f.addKeyListener(this);
 		FPSAnimator anim = new FPSAnimator(canvas, 60, true);
 		anim.start();
+
+		String optionPaneText = "Leertaste: Start/Stop Schwerpunktbewegung \r\n" + "0-9: Verschiedene Quader \r\n"
+				+ "n/N: Nächste Quaderform (bis zu 27 Möglichkeiten) \r\n" + "p/P: Vorherige Quaderform \r\n"
+				+ "WASD: Kamera \r\n" + "Quaderoptionen: \r\n";
+
+		int i = 0;
+		for (double[] arr : options) {
+			optionPaneText += "[" + ("000" + i).substring((i + "").length()) + "] | {";
+			boolean first = true;
+			for (double d : arr) {
+				if (!first) {
+					optionPaneText += ", ";
+				}
+				optionPaneText += d;
+				first = false;
+			}
+			optionPaneText += "} \r\n";
+			++i;
+		}
+
+		JOptionPane pane = new JOptionPane(optionPaneText);
+		JDialog dialog = pane.createDialog(null, "Anleitung");
+		dialog.setModal(false);
+		dialog.show();
+
 	};
 
 	// ---------- OpenGL-Events ---------------------------
@@ -265,8 +294,15 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 			}
 		}
 
-		if ((e.getKeyChar() == 'n')) {
+		if ((e.getKeyChar() == 'N') || (e.getKeyChar() == 'n')) {
 			drawQuad(++globalIndex % options.length);
+		}
+
+		if ((e.getKeyChar() == 'P') || (e.getKeyChar() == 'p')) {
+			if (globalIndex == 0) {
+				globalIndex = options.length;
+			}
+			drawQuad(--globalIndex);
 		}
 
 		int keyInt = e.getKeyChar() - '0';
