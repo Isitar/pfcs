@@ -2,6 +2,7 @@ package ch.fhnw.pfcs;
 
 //  -------------   JOGL 3D-Programm  -------------------
 import java.awt.*;
+import java.awt.RenderingHints.Key;
 import java.awt.event.*;
 import java.util.*;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 	double quadA = 1.5, quadB = 1.3, quadC = 1.3;
 	float elevation = 10;
 	float azimut = 40;
+	double speed = 0.01;
 
 	Quader quad;
 	RotKoerper rotk;
@@ -91,10 +93,10 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 
 		canvas.addKeyListener(this);
 		f.addKeyListener(this);
-		FPSAnimator anim = new FPSAnimator(canvas, 60, true);
+		FPSAnimator anim = new FPSAnimator(canvas, 120, true);
 		anim.start();
 
-		String optionPaneText = "Leertaste: Start/Stop Schwerpunktbewegung \r\n" + "0-9: Verschiedene Quader \r\n"
+		String optionPaneText = "Leertaste: Start/Stop Schwerpunktbewegung \r\n" +"Pfeil Hoch/Runter: Geschwindigkeit \r\n"+ "0-9: Verschiedene Quader \r\n"
 				+ "n/N: Nächste Quaderform (bis zu 27 Möglichkeiten) \r\n" + "p/P: Vorherige Quaderform \r\n"
 				+ "WASD: Kamera \r\n" + "Quaderoptionen: \r\n";
 
@@ -190,13 +192,13 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		M = M.postMultiply(Mat4.translate((float) x, 0, 0));
 		matrixStack.push(M);
 		// Move
-		gdQuad.move(0.1);
+		gdQuad.move(speed);
 		double[] state = gdQuad.getState();
 		M = M.postMultiply(Mat4.rotate((float) state[3], new Vec3(state[4], state[5], state[6])));
 
 		mygl.setM(gl, M);
 		quad.zeichne(gl, (float) quadA, (float) quadB, (float) quadC, true);
-		M = matrixStack.pop();
+		//M = matrixStack.pop();
 		mygl.setM(gl, M);
 		mygl.setColor(1, 0, 0);
 		zeichneLinie(gl, new Vec3(state[0], state[1], state[2]));
@@ -260,6 +262,12 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 
 	@Override
 	public void keyPressed(KeyEvent e) {
+		if ((e.getKeyCode() == KeyEvent.VK_UP)) {
+			speed += 0.01;
+		}
+		if ((e.getKeyCode() == KeyEvent.VK_DOWN)) {
+			speed -= 0.01;
+		}
 	}
 
 	@Override
@@ -283,7 +291,7 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		}
 
 		if ((e.getKeyChar() == 'H') || (e.getKeyChar() == 'h')) {
-			gdQuad.move(0.1);
+			gdQuad.move(speed);
 		}
 
 		if ((e.getKeyChar() == ' ')) {
@@ -294,6 +302,8 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 			}
 		}
 
+
+		
 		if ((e.getKeyChar() == 'N') || (e.getKeyChar() == 'n')) {
 			drawQuad(++globalIndex % options.length);
 		}

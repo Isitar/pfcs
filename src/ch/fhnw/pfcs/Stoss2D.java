@@ -82,12 +82,12 @@ public class Stoss2D implements WindowListener, GLEventListener, KeyListener {
 		public Vec3 getVVec() {
 			return new Vec3(vx, vy, 0);
 		}
-		
+
 		public void setVVec(Vec3 v) {
 			this.vx = v.x;
 			this.vy = v.y;
 		}
-		
+
 		public void setVVec(double[] d) {
 			this.vx = d[0];
 			this.vy = d[1];
@@ -98,15 +98,34 @@ public class Stoss2D implements WindowListener, GLEventListener, KeyListener {
 	Kugel k2 = new Kugel(0.05, 0.01, xleft, 0.1, 1, 0);
 	// --------- Methoden ----------------------------------
 
-	public void stoss(Kugel k1, Kugel k2, double stossZahl) {
+	void stoss(Kugel k1, Kugel k2, double stossZahl) {
+
+		Vec3 n = new Vec3(k2.xm - k1.xm, k2.ym - k1.ym, 0);
+
+		// kein Stoss
+		if (n.length() > k1.r + k2.r) {
+			return;
+		}
+
 		Vec3 v1 = k1.getVVec();
 		Vec3 v2 = k2.getVVec();
-		Vec3 n = new Vec3(k2.xm - k1.xm, k2.ym - k1.ym, 0).normalize();
+
+		n = n.normalize();
 		double v1n = v1.dot(n);
 		double v2n = v2.dot(n);
-		double[] newV = stoss1D(k1.m,v1n,k2.m,v2n,stossZahl);
-		Vec3 vv1 = n.scale((float)newV[0]);
+		Vec3 vv1n = n.scale((float) v1n); // v1n*n
+		Vec3 vv2n = n.scale((float) v2n); // v2n*n
+		Vec3 vv1p = v1.subtract(vv1n); // v-vv1n
+		Vec3 vv2p = v2.subtract(vv2n); // v-vv2n
+	
+		double[] vv = stoss1D(k1.m, v1n, k2.m, v2n, stossZahl);
+		v1n = vv[0];
+		v2n = vv[1];
 		
+		v1 = n.scale((float) v1n).add(vv1p); // v1 = v1n*n + vv1p
+		v2 = n.scale((float) v2n).add(vv2p); // v1 = v1n*n + vv1p
+		k1.setVVec(v1);
+		k2.setVVec(v2);
 	}
 
 	/**
@@ -183,6 +202,7 @@ public class Stoss2D implements WindowListener, GLEventListener, KeyListener {
 		mygl.setColor(1f, 0.9f, 0.2f);
 		k1.zeichne(gl);
 		k2.zeichne(gl);
+		stoss(k1, k2, 0.8);
 		k1.move(dt);
 		k2.move(dt);
 	}
