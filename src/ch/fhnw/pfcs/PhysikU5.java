@@ -55,7 +55,7 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 
 	double dx = 0; // Quader speed
 
-	private GyroQuad[] gdQuads = new GyroQuad[10];
+	private GyroQuad[] gdQuads = new GyroQuad[6];
 
 	// Quaternion qStart = Quaternion.fromAxis(new Vec3(1, 0, 0), 10);
 	// Quaternion qEnd = Quaternion.fromAxis(new Vec3(0, 1, 1), 70);
@@ -158,7 +158,7 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 			gdQuads[i].setState(1, 1, 1, 0, 1, 1, 1);
 			gdQuads[i].x = 0;
 
-			gdQuads[i].y = i * delta + bottom;
+			gdQuads[i].y = i * delta + bottom + (0.5)*delta;
 
 			gdQuads[i].z = r.nextDouble();
 
@@ -194,18 +194,14 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 			matrixStack.push(M);
 			mygl.setM(gl, matrixStack.pop());
 		}
-		mygl.setLightPosition(gl, 2, 4, 4); // changed
-		// matrixStack.push(M.postMultiply(Mat4.translate(mygl.getLightPosition()[0],
-		// myglad.getLightPosition()[1], mygl.getLightPosition()[2])));
-		// mygl.setM(gl, matrixStack.pop());
-		// lightBulb.draw(gl, mygl);
+		mygl.setLightPosition(gl, 2, 4, 4); 
 		M = matrixStack.pop();
 		mygl.setM(gl, M);
 
 		mygl.setShadingParam(gl, 0.2f, 0.8f);
 		mygl.setShadingLevel(gl, 1);
 
-		matrixStack.push(M);
+		//matrixStack.push(M);
 		// normal
 		for (GyroQuad gyroQuad : gdQuads) {
 			mygl.setColor(gyroQuad.color1, gyroQuad.color2, gyroQuad.color3);
@@ -374,7 +370,7 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 			gdQuads[i].setState(1, 1, 1, 0, 1, 1, 1);
 			gdQuads[i].x = 0;
 
-			gdQuads[i].y = i * delta + bottom;
+			gdQuads[i].y = i * delta + bottom + (0.5)*delta;
 
 			gdQuads[i].z = r.nextDouble() * 4;
 
