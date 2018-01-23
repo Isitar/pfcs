@@ -36,7 +36,6 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 	float azimut = 40;
 	double speed = 0.01;
 
-	Quader quad;
 	RotKoerper rotk;
 
 	Mat4 M; // ModelView-Matrix
@@ -45,7 +44,7 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 	Stack<Mat4> matrixStack = new Stack<>();
 
 	// -------- Viewing-Volume ---------------
-	float left = -4f, right = 4f;
+	float left = -8f, right = 8f;
 	float bottom, top;
 	float near = -10, far = 1000;
 
@@ -54,9 +53,9 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 	Vec3 B = new Vec3(0, 0, 0); // Zielpunkt
 	Vec3 up = new Vec3(0, 1, 0); // up-Richtung
 
-	double x = 0, dx = 0; // Quader position
+	double dx = 0; // Quader speed
 
-	GyroDynamics gdQuad;
+	private GyroQuad[] gdQuads = new GyroQuad[10];
 
 	// Quaternion qStart = Quaternion.fromAxis(new Vec3(1, 0, 0), 10);
 	// Quaternion qEnd = Quaternion.fromAxis(new Vec3(0, 1, 1), 70);
@@ -65,8 +64,8 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 	boolean cameraIsLight = false;
 
 	// quader-options, 27
-	double[][] options = { { 1, 1, 1 }, { 1, 1, 0.75 }, { 1, 1, 0.5 }, { 1, 0.75, 1 }, { 1, 0.75, 0.75 },
-			{ 1, 0.75, 0.5 }, { 1, 0.5, 1 }, { 1, 0.5, 0.75 }, { 1, 0.5, 0.5 }, { 0.75, 1, 1 }, { 0.75, 1, 0.75 },
+	double[][] options = { { 1, 1, 1 }, { 1, 1, 0.75 }, { 1, 1, 0.1 }, { 1, 0.75, 1 }, { 1, 0.75, 0.75 },
+			{ 1, 0.5, 0.1 }, { 1, 0.5, 1 }, { 1, 0.5, 0.75 }, { 1, 0.5, 0.5 }, { 0.75, 1, 1 }, { 0.75, 1, 0.75 },
 			{ 0.75, 1, 0.5 }, { 0.75, 0.75, 1 }, { 0.75, 0.75, 0.75 }, { 0.75, 0.75, 0.5 }, { 0.75, 0.5, 1 },
 			{ 0.75, 0.5, 0.75 }, { 0.75, 0.5, 0.5 }, { 0.5, 1, 1 }, { 0.5, 1, 0.75 }, { 0.5, 1, 0.5 }, { 0.5, 0.75, 1 },
 			{ 0.5, 0.75, 0.75 }, { 0.5, 0.75, 0.5 }, { 0.5, 0.5, 1 }, { 0.5, 0.5, 0.75 }, { 0.5, 0.5, 0.5 } };
@@ -96,7 +95,8 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		FPSAnimator anim = new FPSAnimator(canvas, 120, true);
 		anim.start();
 
-		String optionPaneText = "Leertaste: Start/Stop Schwerpunktbewegung \r\n" +"Pfeil Hoch/Runter: Geschwindigkeit \r\n"+ "0-9: Verschiedene Quader \r\n"
+		String optionPaneText = "Leertaste: Start/Stop Schwerpunktbewegung \r\n"
+				+ "Pfeil Hoch/Runter: Geschwindigkeit \r\n" + "0-9: Verschiedene Quader \r\n"
 				+ "n/N: Nächste Quaderform (bis zu 27 Möglichkeiten) \r\n" + "p/P: Vorherige Quaderform \r\n"
 				+ "WASD: Kamera \r\n" + "Quaderoptionen: \r\n";
 
@@ -135,8 +135,7 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		gl.glClearColor(0, 0, 1, 1);
 		int programId = MyShaders.initShaders(gl, vShader, fShader);
 		mygl = new MyGLBase1(gl, programId, maxVerts);
-		quad = new Quader(mygl);
-		rotk = new RotKoerper(mygl);
+
 		drawQuad(0);
 	}
 
@@ -150,7 +149,26 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		double paramA = (quadA * quadA + quadB * quadB) / 12;
 		double paramB = (quadA * quadA + quadC * quadC) / 12;
 		double paramC = (quadB * quadB + quadC * quadC) / 12;
-		gdQuad = new GyroDynamics(paramA, paramB, paramC);
+
+		Random r = new Random();
+		double delta = (top - bottom) / gdQuads.length;
+
+		for (int i = 0; i < gdQuads.length; ++i) {
+			gdQuads[i] = new GyroQuad(paramA, paramB, paramC);
+			gdQuads[i].setState(1, 1, 1, 0, 1, 1, 1);
+			gdQuads[i].x = 0;
+
+			gdQuads[i].y = i * delta + bottom;
+
+			gdQuads[i].z = r.nextDouble();
+
+			gdQuads[i].quad = new Quader(mygl);
+
+			gdQuads[i].quadA = quadA;
+			gdQuads[i].quadB = quadB;
+			gdQuads[i].quadC = quadC;
+		}
+
 	}
 
 	Circle lightBulb = new Circle(0.4f, new Point(0, 0, 0), new Point(1, 1, 1));
@@ -186,23 +204,37 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 
 		mygl.setShadingParam(gl, 0.2f, 0.8f);
 		mygl.setShadingLevel(gl, 1);
-		mygl.setColor(1, 1, 0);
 
 		matrixStack.push(M);
-		M = M.postMultiply(Mat4.translate((float) x, 0, 0));
-		matrixStack.push(M);
-		// Move
-		gdQuad.move(speed);
-		double[] state = gdQuad.getState();
-		M = M.postMultiply(Mat4.rotate((float) state[3], new Vec3(state[4], state[5], state[6])));
+		// normal
+		for (GyroQuad gyroQuad : gdQuads) {
+			mygl.setColor(gyroQuad.color1, gyroQuad.color2, gyroQuad.color3);
+			// save matrix;
+			matrixStack.push(M);
 
-		mygl.setM(gl, M);
-		quad.zeichne(gl, (float) quadA, (float) quadB, (float) quadC, true);
-		//M = matrixStack.pop();
-		mygl.setM(gl, M);
-		mygl.setColor(1, 0, 0);
-		zeichneLinie(gl, new Vec3(state[0], state[1], state[2]));
-		x += dx;
+			// translate quad
+			M = M.postMultiply(Mat4.translate((float) gyroQuad.x, (float) gyroQuad.y, (float) gyroQuad.z));
+
+			// rotate quad
+			gyroQuad.move(speed);
+			double[] state = gyroQuad.getState();
+			M = M.postMultiply(Mat4.rotate((float) state[3], new Vec3(state[4], state[5], state[6])));
+
+			// draw quad
+			mygl.setM(gl, M);
+			gyroQuad.quad.zeichne(gl, (float) gyroQuad.quadA, (float) gyroQuad.quadB, (float) gyroQuad.quadC, true);
+
+			// zeichne linie
+			mygl.setColor(1, 0, 0);
+			zeichneLinie(gl, new Vec3(state[0], state[1], state[2]));
+
+			// move quad forwards
+			gyroQuad.x += dx;
+
+			// cleanup matrix
+			M = matrixStack.pop();
+		}
+
 	}
 
 	public void zeichneLinie(GL3 gl, Vec3 vec) {
@@ -290,10 +322,6 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 			azimut++;
 		}
 
-		if ((e.getKeyChar() == 'H') || (e.getKeyChar() == 'h')) {
-			gdQuad.move(speed);
-		}
-
 		if ((e.getKeyChar() == ' ')) {
 			if (dx == 0) {
 				dx = 0.01;
@@ -302,8 +330,10 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 			}
 		}
 
+		if (e.getKeyChar() == 'X' || (e.getKeyChar() == 'x')) {
+			randomQuads();
+		}
 
-		
 		if ((e.getKeyChar() == 'N') || (e.getKeyChar() == 'n')) {
 			drawQuad(++globalIndex % options.length);
 		}
@@ -325,8 +355,34 @@ public class PhysikU5 implements WindowListener, GLEventListener, KeyListener {
 		double[] params = options[index];
 		setQuadOptions(params);
 		instanciateGdQuad();
-		gdQuad.setState(1, 1, 1, 0, 1, 1, 1);
-		x = 0;
+
 		globalIndex = index;
+	}
+
+	private void randomQuads() {
+		double delta = (top - bottom) / gdQuads.length;
+		Random r = new Random();
+
+		for (int i = 0; i < gdQuads.length; ++i) {
+			double[] params = options[r.nextInt(options.length)];
+			setQuadOptions(params);
+			double paramA = (quadA * quadA + quadB * quadB) / 12;
+			double paramB = (quadA * quadA + quadC * quadC) / 12;
+			double paramC = (quadB * quadB + quadC * quadC) / 12;
+
+			gdQuads[i] = new GyroQuad(paramA, paramB, paramC);
+			gdQuads[i].setState(1, 1, 1, 0, 1, 1, 1);
+			gdQuads[i].x = 0;
+
+			gdQuads[i].y = i * delta + bottom;
+
+			gdQuads[i].z = r.nextDouble() * 4;
+
+			gdQuads[i].quad = new Quader(mygl);
+
+			gdQuads[i].quadA = quadA;
+			gdQuads[i].quadB = quadB;
+			gdQuads[i].quadC = quadC;
+		}
 	}
 }

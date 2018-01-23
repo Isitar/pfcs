@@ -50,7 +50,7 @@ public class MyShaders {
             + "        Id = diffuse * dot(toLight, normal);            /* Gesetz von Lambert */                     \n"
             + "        if ( Id < 0 ) Id = 0;                                                                        \n"
             + "        vec3 whiteColor = vec3(1,1,1);                                                               \n"
-            + "        vec3 reflectedLight =  (ambient + Id) * vColor.rgb;                                           \n"
+            + "        vec3 reflectedLight =  (ambient + Id) * vColor.rgb;                                          \n"
             + "        fColor.rgb = min(reflectedLight, whiteColor);                                                \n"
             + "      }                                                                                              \n"
             + "   }";
